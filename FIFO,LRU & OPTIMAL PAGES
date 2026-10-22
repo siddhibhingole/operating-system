@@ -1,0 +1,139 @@
+
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+int pages[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2};
+int n = 13;
+int capacity = 3;
+
+void simulate(string name, int type)
+{
+    vector<int> frame(capacity, -1);
+    int last[1000];
+    for (int i = 0; i < 1000; i++)
+        last[i] = -1;
+
+    int faults = 0, hits = 0, pointer = 0;
+
+    cout << "\n" << name << " Page Replacement\n";
+    cout << "Page\tFrames\t\tStatus\n";
+
+    for (int i = 0; i < n; i++)
+    {
+        int page = pages[i];
+        bool found = false;
+
+        for (int j = 0; j < capacity; j++)
+        {
+            if (frame[j] == page)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            hits++;
+        }
+        else
+        {
+            faults++;
+            int pos = -1;
+
+            // Find an empty frame
+            for (int j = 0; j < capacity; j++)
+            {
+                if (frame[j] == -1)
+                {
+                    pos = j;
+                    break;
+                }
+            }
+
+            // Replace a page if all frames are full
+            if (pos == -1)
+            {
+                if (type == 1) // FIFO
+                {
+                    pos = pointer;
+                    pointer = (pointer + 1) % capacity;
+                }
+                else if (type == 2) // LRU
+                {
+                    pos = 0;
+                    for (int j = 1; j < capacity; j++)
+                    {
+                        if (last[frame[j]] < last[frame[pos]])
+                            pos = j;
+                    }
+                }
+                else // Optimal
+                {
+                    int farthest = -1;
+                    pos = 0;
+
+                    for (int j = 0; j < capacity; j++)
+                    {
+                        int next = n + 1;
+
+                        for (int k = i + 1; k < n; k++)
+                        {
+                            if (pages[k] == frame[j])
+                            {
+                                next = k;
+                                break;
+                            }
+                        }
+
+                        if (next > farthest)
+                        {
+                            farthest = next;
+                            pos = j;
+                        }
+                    }
+                }
+            }
+
+            frame[pos] = page;
+        }
+
+        last[page] = i;
+
+        cout << page << "\t";
+        for (int j = 0; j < capacity; j++)
+        {
+            if (frame[j] == -1)
+                cout << "- ";
+            else
+                cout << frame[j] << " ";
+        }
+
+        if (found)
+            cout << "\tHIT";
+        else
+            cout << "\tFAULT";
+
+        cout << endl;
+    }
+
+    cout << "Total Page Faults: " << faults << endl;
+    cout << "Total Page Hits: " << hits << endl;
+}
+
+int main()
+{
+    cout << "Page Reference String: ";
+    for (int i = 0; i < n; i++)
+        cout << pages[i] << " ";
+
+    cout << "\nNumber of Frames: " << capacity << endl;
+
+    simulate("FIFO", 1);
+    simulate("LRU", 2);
+    simulate("Optimal", 3);
+
+    return 0;
+}
