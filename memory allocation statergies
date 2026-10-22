@@ -1,0 +1,79 @@
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+void allocateMemory(vector<int> blocks, vector<int> processes,
+                    int choice, string name) {
+    int n = blocks.size();
+    int m = processes.size();
+    vector<int> allocation(m, -1);
+    int allocatedMemory = 0, count = 0;
+
+    for (int i = 0; i < m; i++) {
+        int index = -1;
+
+        for (int j = 0; j < n; j++) {
+            if (blocks[j] >= processes[i]) {
+                if (choice == 1) {
+                    index = j;
+                    break;
+                }
+                if (index == -1 ||
+                    (choice == 2 && blocks[j] < blocks[index]) ||
+                    (choice == 3 && blocks[j] > blocks[index])) {
+                    index = j;
+                }
+            }
+        }
+
+        if (index != -1) {
+            allocation[i] = index;
+            blocks[index] -= processes[i];
+            allocatedMemory += processes[i];
+            count++;
+        }
+    }
+
+    cout << "\n--- " << name << " ---\n";
+    cout << "Process\tSize\tBlock\tStatus\n";
+
+    for (int i = 0; i < m; i++) {
+        cout << "P" << i + 1 << "\t"
+             << processes[i] << "\t";
+
+        if (allocation[i] != -1)
+            cout << allocation[i] + 1 << "\tAllocated";
+        else
+            cout << "-\tNot Allocated";
+
+        cout << "\n";
+    }
+
+    int freeMemory = 0;
+    for (int b : blocks)
+        freeMemory += b;
+
+    int totalMemory = allocatedMemory + freeMemory;
+
+    cout << "Successfully allocated: " << count << "\n";
+    cout << "Remaining free memory: " << freeMemory << " KB\n";
+    cout << "Memory utilization: "
+         << (totalMemory == 0 ? 0 :
+             allocatedMemory * 100.0 / totalMemory)
+         << "%\n";
+}
+
+int main() {
+    vector<int> blocks = {100, 500, 200, 300, 600};
+    vector<int> processes = {212, 417, 112, 426};
+
+    cout << "Memory Blocks: 100 500 200 300 600 KB\n";
+    cout << "Processes: 212 417 112 426 KB\n";
+
+    allocateMemory(blocks, processes, 1, "First Fit");
+    allocateMemory(blocks, processes, 2, "Best Fit");
+    allocateMemory(blocks, processes, 3, "Worst Fit");
+
+    return 0;
+}
