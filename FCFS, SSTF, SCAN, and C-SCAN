@@ -1,0 +1,107 @@
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cstdlib>
+using namespace std;
+
+int main() {
+    vector<int> requests = {98, 183, 37, 122, 14, 124, 65, 67};
+    int head = 53;
+    int diskSize = 200;
+    int n = requests.size();
+
+    // FCFS
+    int current = head, fcfs = 0;
+    cout << "FCFS Order: " << current;
+    for (int r : requests) {
+        fcfs += abs(current - r);
+        current = r;
+        cout << " -> " << r;
+    }
+    cout << "\nTotal Head Movement = " << fcfs << "\n\n";
+
+    // SSTF
+    vector<int> remaining = requests;
+    current = head;
+    int sstf = 0;
+    cout << "SSTF Order: " << current;
+
+    while (!remaining.empty()) {
+        int best = 0;
+        for (int i = 1; i < (int)remaining.size(); i++) {
+            if (abs(current - remaining[i]) <
+                abs(current - remaining[best])) {
+                best = i;
+            }
+        }
+        int next = remaining[best];
+        sstf += abs(current - next);
+        current = next;
+        cout << " -> " << next;
+        remaining.erase(remaining.begin() + best);
+    }
+    cout << "\nTotal Head Movement = " << sstf << "\n\n";
+
+    // Sort requests for SCAN and C-SCAN
+    vector<int> sorted = requests;
+    sort(sorted.begin(), sorted.end());
+
+    // SCAN: move right first, reach end, then reverse
+    current = head;
+    int scan = 0;
+    cout << "SCAN Order: " << current;
+
+    for (int r : sorted) {
+        if (r >= head) {
+            scan += abs(current - r);
+            current = r;
+            cout << " -> " << r;
+        }
+    }
+
+    scan += abs(current - (diskSize - 1));
+    current = diskSize - 1;
+    cout << " -> " << current;
+
+    for (int i = n - 1; i >= 0; i--) {
+        if (sorted[i] < head) {
+            scan += abs(current - sorted[i]);
+            current = sorted[i];
+            cout << " -> " << current;
+        }
+    }
+    cout << "\nTotal Head Movement = " << scan << "\n\n";
+
+    // C-SCAN: move right, jump to 0, continue right
+    current = head;
+    int cscan = 0;
+    cout << "C-SCAN Order: " << current;
+
+    for (int r : sorted) {
+        if (r >= head) {
+            cscan += abs(current - r);
+            current = r;
+            cout << " -> " << r;
+        }
+    }
+
+    cscan += abs(current - (diskSize - 1));
+    current = diskSize - 1;
+    cout << " -> " << current;
+
+    cscan += current;  // Return from cylinder 199 to 0
+    current = 0;
+    cout << " -> " << current;
+
+    for (int r : sorted) {
+        if (r < head) {
+            cscan += abs(current - r);
+            current = r;
+            cout << " -> " << r;
+        }
+    }
+    cout << "\nTotal Head Movement = " << cscan << "\n";
+
+    return 0;
+}
