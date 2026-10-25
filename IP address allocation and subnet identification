@@ -1,0 +1,101 @@
+
+#include <iostream>
+#include <string>
+#include <sstream>
+using namespace std;
+
+bool validateIP(string ip, int octets[]) {
+    stringstream ss(ip);
+    string part;
+    int count = 0;
+
+    while (getline(ss, part, '.')) {
+        if (part.empty() || count >= 4)
+            return false;
+
+        for (char c : part) {
+            if (c < '0' || c > '9')
+                return false;
+        }
+
+        stringstream convert(part);
+        int value;
+        convert >> value;
+
+        if (value < 0 || value > 255)
+            return false;
+
+        octets[count++] = value;
+    }
+
+    return count == 4;
+}
+
+string getNetwork(int ip[], int mask[]) {
+    string network = "";
+
+    for (int i = 0; i < 4; i++) {
+        network += to_string(ip[i] & mask[i]);
+
+        if (i < 3)
+            network += ".";
+    }
+
+    return network;
+}
+
+int main() {
+    string ip1, ip2, maskIP;
+    int host1[4], host2[4], mask[4];
+
+    cout << "IP Address Allocation and Subnet Identification\n";
+    cout << "------------------------------------------------\n";
+
+    cout << "Enter IP address for Host 1: ";
+    cin >> ip1;
+
+    cout << "Enter IP address for Host 2: ";
+    cin >> ip2;
+
+    cout << "Enter subnet mask: ";
+    cin >> maskIP;
+
+    if (!validateIP(ip1, host1) ||
+        !validateIP(ip2, host2) ||
+        !validateIP(maskIP, mask)) {
+        cout << "\nError: Invalid IPv4 address or subnet mask.\n";
+        return 0;
+    }
+
+    // Check whether the subnet mask is valid
+    unsigned int maskValue = 0;
+
+    for (int i = 0; i < 4; i++)
+        maskValue = (maskValue << 8) | mask[i];
+
+    unsigned int inverse = (~maskValue) & 0xFFFFFFFFu;
+
+    if ((inverse & (inverse + 1)) != 0) {
+        cout << "\nError: Invalid subnet mask.\n";
+        return 0;
+    }
+
+    cout << "\n--- IP Allocation Details ---\n";
+    cout << "Host 1 IP: " << ip1 << endl;
+    cout << "Host 2 IP: " << ip2 << endl;
+    cout << "Subnet Mask: " << maskIP << endl;
+
+    string network1 = getNetwork(host1, mask);
+    string network2 = getNetwork(host2, mask);
+
+    cout << "\n--- Subnet Identification ---\n";
+    cout << "Host 1 Network Address: " << network1 << endl;
+    cout << "Host 2 Network Address: " << network2 << endl;
+
+    if (network1 == network2)
+        cout << "\nResult: Both hosts belong to the SAME subnet.\n";
+    else
+        cout << "\nResult: Hosts belong to DIFFERENT subnets.\n";
+
+    return 0;
+}
